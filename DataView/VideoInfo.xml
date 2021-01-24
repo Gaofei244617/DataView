@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root type="TID">
+    <video name="01_JiLin_20210105_NiXiang.flv" scene="JiLin">
+        <IllegalParking>1</IllegalParking>
+        <Amble>2</Amble>
+    </video>
+    <video name="01_HeBei_20201123.flv" scene="HeBei">
+        <PedestrianEntry>3</PedestrianEntry>
+        <NonVehicleEntry>1</NonVehicleEntry>
+        <Retrograde>1</Retrograde>
+    </video>
+    <video name="07_LiuZhou_12423.flv" scene="LiuZhou">
+        <OccupancyEL>5</OccupancyEL>
+    </video>
+    <video name="08_LiuZhou_nixing.flv" scene="LiuZhou">
+        <Congestion>1</Congestion>
+    </video>
+
+    <video name="05_Other.flv" scene="Other">
+        <Fog>1</Fog>
+    </video>
+</root>

@@ -1,0 +1,90 @@
+﻿<Window x:Class="DataView.ImportDataDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:pu="clr-namespace:Panuon.UI.Silver;assembly=Panuon.UI.Silver"
+        xmlns:local="clr-namespace:DataView"
+        mc:Ignorable="d"
+        MouseDown="MousePress"
+        Height="250" Width="350" 
+        Background="Transparent"
+        AllowsTransparency="True" 
+        WindowStyle="None">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Panuon.UI.Silver;component/Control.xaml"/>
+                <ResourceDictionary Source="theme/ButtonStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Border CornerRadius="10,10,10,10" BorderThickness="1" BorderBrush="Gray" Background="White" Grid.ColumnSpan="2">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30*"/>
+                    <RowDefinition Height="60*"/>
+                    <RowDefinition Height="60*"/>
+                    <RowDefinition Height="60*"/>
+                    <RowDefinition Height="60*"/>
+                </Grid.RowDefinitions>
+                <Button Width="25" Height="25" 
+                        Padding="0,0,0,0"
+                        HorizontalAlignment="Right" 
+                        VerticalAlignment="Top" 
+                        BorderBrush="Transparent" 
+                        Style="{StaticResource CloseBtnStyle}" 
+                        Click="Click_Close">
+                    <Button.Background>
+                        <ImageBrush ImageSource="theme/close.png" Stretch="Uniform"/>
+                    </Button.Background>
+                </Button>
+                <TextBox x:Name="AlarmImagePath" 
+                         pu:TextBoxHelper.Watermark="告警图片路径(文件夹)" 
+                         pu:TextBoxHelper.FocusedBorderBrush="#00FFA5"
+                         pu:TextBoxHelper.FocusedShadowColor="#00FFA5"
+                         pu:TextBoxHelper.CornerRadius="5"
+                         pu:TextBoxHelper.IsClearButtonVisible="True"
+                         Margin="15,10,15,10" 
+                         AllowDrop="True"
+                         PreviewDragOver="TextBox_PreviewDragOver"
+                         PreviewDrop="TextBox_PreviewDrop" 
+                         Grid.Row="1"/>
+                <TextBox x:Name="VideoPath" 
+                         pu:TextBoxHelper.Watermark="测试视频路径(文件夹)" 
+                         pu:TextBoxHelper.FocusedBorderBrush="Orange"
+                         pu:TextBoxHelper.FocusedShadowColor="#00FFA5"
+                         pu:TextBoxHelper.CornerRadius="5"
+                         pu:TextBoxHelper.IsClearButtonVisible="True"
+                         Margin="15,10,15,10" 
+                         AllowDrop="True"
+                         PreviewDragOver="TextBox_PreviewDragOver"
+                         PreviewDrop="TextBox_PreviewDrop" 
+                         Grid.Row="2"/>
+                <TextBox x:Name="XmlFile" 
+                         pu:TextBoxHelper.Watermark="应报统计(xml文件)" 
+                         pu:TextBoxHelper.FocusedBorderBrush="LightBlue"
+                         pu:TextBoxHelper.FocusedShadowColor="#00FFA5"
+                         pu:TextBoxHelper.CornerRadius="5"
+                         pu:TextBoxHelper.IsClearButtonVisible="True"
+                         Margin="15,10,15,10" 
+                         AllowDrop="True"
+                         PreviewDragOver="TextBox_PreviewDragOver"
+                         PreviewDrop="TextBox_PreviewDrop" 
+                         Grid.Row="3"/>
+                <Button Content="确   定" 
+                        Background="#C832CD32"
+                        pu:ButtonHelper.ButtonStyle="Standard"
+                        pu:ButtonHelper.ClickStyle="Sink"
+                        pu:ButtonHelper.HoverBrush="#00CD66"
+                        pu:ButtonHelper.CornerRadius="5"  
+                        Margin="233,10,15,15" 
+                        Click="Click_OK" 
+                        Grid.Row="4"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

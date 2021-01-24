@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root type="TID">
+    <scene>
+        <value tag="HeBei">河北</value>
+        <value tag="JiLin">吉林</value>
+        <value tag="LiuZhou">柳州</value>
+        <value tag="JiangXi">江西</value>
+        <value tag="JingQin">京秦</value>
+        <value tag="Other">Other</value>
+        <value tag="UnKnown">UnKnown</value>
+    </scene>
+    <incident>
+        <value tag="Amble">缓行</value>
+        <value tag="Retrograde">逆行</value>
+        <value tag="IllegalParking">停车</value>
+        <value tag="Accident">事故</value>
+        <value tag="BearOff">驶离</value>
+        <value tag="OccupancyEL">占用应急车道</value>
+        <value tag="NonVehicleEntry">非机动车禁闯</value>
+        <value tag="PedestrianEntry">行人禁闯</value>
+        <value tag="Congestion">拥堵</value>
+        <value tag="AbandonedObject">抛洒物</value>
+        <value tag="FireSmoke">烟火</value>
+        <value tag="Fog">起雾</value>
+        <value tag="Snow">积雪</value>
+        <value tag="UnKnown">UnKnown</value>
+    </incident>
+</root>
