@@ -40,7 +40,34 @@ namespace DataView
         {
             var win = new MessageWindow();
             win.Text.Text = msg;
+            win.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             win.Show();
         }
+        public static void ShowDialog(string msg)
+        {
+            var win = new MessageWindow();
+            win.Text.Text = msg;
+            win.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            win.ShowDialog();
+        }
+
+        public static void Show(string msg, Window parent)
+        {
+            var win = new MessageWindow();
+            win.Owner = parent;
+            win.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            win.Text.Text = msg;
+            win.Show();
+        }
+
+        public static void ShowDialog(string msg, Window parent)
+        {
+            var win = new MessageWindow();
+            win.Owner = parent;
+            win.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            win.Text.Text = msg;
+            win.ShowDialog();
+        }
+
     }
 }

@@ -43,28 +43,30 @@
               Grid.ColumnSpan="2" >
 
             <MenuItem Header="导入数据" 
-                      Style="{StaticResource MenuItemStyle}"
                       Width="90" 
                       FontSize="12"
                       Icon="import.png">
-                <MenuItem Header="初始化数据" Icon="all.png" Click="ImportData" Style="{StaticResource MenuItemStyle}" />
-                <MenuItem Header="更新告警图片" Icon="image.png" Style="{StaticResource MenuItemStyle}"/>
-                <MenuItem Header="更新测试视频" Icon="video.png" Style="{StaticResource MenuItemStyle}"/>
-                <MenuItem Header="更新视频标注" Icon="xml.png" Style="{StaticResource MenuItemStyle}"/>
+                <MenuItem Header="初始化数据" Height="30" Icon="all.png" Click="ImportData"/>
+                <MenuItem Header="更新告警图片" Height="30" Icon="image.png"/>
+                <MenuItem Header="更新测试视频" Height="30" Icon="video.png"/>
+                <MenuItem Header="更新视频标注" Height="30" Icon="xml.png"/>
             </MenuItem>
             <MenuItem Header="导出数据" 
-                      Style="{StaticResource MenuItemStyle}"
                       Width="90" 
                       FontSize="12"
                       Icon="export.png"
                       Click="ExportData"/>
             <MenuItem Header="合并外部数据" 
-                      Style="{StaticResource MenuItemStyle}"
                       FontSize="12"
                       Icon="merge.png"
                       Click="MergeData"/>
+            <MenuItem Header="设置" 
+                      Width="60"
+                      FontSize="12"
+                      Icon="setting.png">
+                <MenuItem Header="图片查找路径" Height="30" Icon="find.png"/>
+            </MenuItem>
             <MenuItem Header="关于" 
-                      Style="{StaticResource MenuItemStyle}"
                       FontSize="12"
                       Width="60"
                       Icon="about.png" 

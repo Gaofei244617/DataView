@@ -84,7 +84,7 @@ namespace DataView
             }
             else
             {
-                MessageWindow.Show("Can not read MetaData.xml");
+                MessageWindow.ShowDialog("Can not read MetaData.xml", this);
             }
 
             Resume();
@@ -186,7 +186,7 @@ namespace DataView
                         string[] strs = Regex.Split(name, "___", RegexOptions.IgnoreCase);
                         if (strs.Length < 2)
                         {
-                            MessageWindow.Show("告警图片命名格式错误\n" + img);
+                            MessageWindow.Show("告警图片命名格式错误\n" + img, this);
                             continue;
                         }
                         string[] infos = strs[1].Split('_');
@@ -251,12 +251,11 @@ namespace DataView
                 }
 
                 // 详细数据
-                //detailDataList = GetDetailData();
                 dataWindow.SetDetailData(GetDetailData());
             }
             catch (Exception e)
             {
-                MessageWindow.Show(e.ToString());
+                MessageWindow.ShowDialog(e.ToString(), this);
             }
         }
 
@@ -275,7 +274,7 @@ namespace DataView
                 }
                 catch (IOException e)
                 {
-                    MessageWindow.Show(e.ToString());
+                    MessageWindow.ShowDialog(e.ToString(), this);
                 }
             }
 
@@ -297,34 +296,47 @@ namespace DataView
                 "(id INTEGER, image VARCHAR(256) PRIMARY KEY, scene VARCHAR(32), incident VARCHAR(32), video VARCHAR(128), frame INTEGER, state INTEGER, count INTEGER)";
             cmd.ExecuteNonQuery();
             // 插入数据
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
             foreach (var item in alarmImageList)
             {
                 cmd.CommandText = string.Format($"INSERT INTO AlarmImageTab(id, image, scene, incident, video, frame, state, count)" +
                     $" VALUES ('{item.ID}', '{item.ImagePath}','{item.Scene}','{item.Incident}', '{item.Video}', '{item.Frame}', '{(int)item.State}', '{item.Count}')");
                 cmd.ExecuteNonQuery();
             }
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
+
             /**************************创建TestVideoTab************************************/
             this.Title = "Start to create table TestVideoTab ...";
             cmd.CommandText = "CREATE TABLE IF NOT EXISTS TestVideoTab(VideoName VARCHAR(128) PRIMARY KEY, Directory VARCHAR(128))";
             cmd.ExecuteNonQuery();
             // 插入数据
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
             foreach (var item in testVideoList)
             {
                 cmd.CommandText = string.Format($"INSERT INTO TestVideoTab(VideoName, Directory) VALUES ('{item.VideoName}', '{item.VideoPath}')");
                 cmd.ExecuteNonQuery();
             }
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
 
             /**************************创建MarkVideoTab************************************/
             this.Title = "Start to create table TestVideoTab ...";
             cmd.CommandText = "CREATE TABLE IF NOT EXISTS VideoInfoTab(Scene VARCHAR(32), Video VARCHAR(128), Incident VARCHAR(32), Count INTEGER)";
             cmd.ExecuteNonQuery();
             // 插入数据
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
             foreach (var item in videoInfoList)
             {
                 cmd.CommandText = string.Format($"INSERT INTO VideoInfoTab(Scene, Video, Incident, Count) " +
                     $"VALUES ('{item.Scene}', '{item.VideoName}', '{item.Incident}', '{item.Count}')");
                 cmd.ExecuteNonQuery();
             }
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
         }
 
         public void InitData(string alarmImagePath, string videoPath, string xmlFile)
@@ -351,7 +363,7 @@ namespace DataView
             dbConnection = new SQLiteConnection(DBPath);
             if (dbConnection == null)
             {
-                MessageWindow.Show("无法连接到数据库 data.db");
+                MessageWindow.ShowDialog("无法连接到数据库 data.db", this);
                 return;
             }
             dbConnection.Open();
@@ -535,7 +547,7 @@ namespace DataView
             if (alarmImage.State == DetectType.UnKnown &&
                 videoInfoList.Count(f => f.VideoName == alarmImage.Video) == 0)
             {
-                MessageWindow.Show("告警图片视频不在统计范围" + "\n" + alarmImage.Video);
+                MessageWindow.Show("告警图片视频不在统计范围" + "\n" + alarmImage.Video, this);
             }
         }
 
@@ -570,7 +582,7 @@ namespace DataView
 
             if (!flag)
             {
-                MessageWindow.Show("无法打开视频 [" + alarmImageList[_index].Video + "] 所在位置！");
+                MessageWindow.ShowDialog("无法打开视频 [" + alarmImageList[_index].Video + "] 所在位置！", this);
             }
         }
 
@@ -590,7 +602,7 @@ namespace DataView
 
             if (!flag)
             {
-                MessageWindow.Show("未找到视频 [" + alarmImageList[_index].Video + "]");
+                MessageWindow.ShowDialog("未找到视频 [" + alarmImageList[_index].Video + "]", this);
             }
         }
 
@@ -621,7 +633,7 @@ namespace DataView
             dataWindow.SetDetailData(GetDetailData());
         }
 
-        // RadioButton
+        // 识别正检/误检
         private void Click_JudgeBtn(object sender, RoutedEventArgs e)
         {
             this.trueDetNumBox.Value = 0;
@@ -820,7 +832,7 @@ namespace DataView
         {
             if (_index >= alarmImageList.Count - 1)
             {
-                MessageWindow.Show("No More Image");
+                MessageWindow.ShowDialog("No More Image", this);
                 return;
             }
             else
@@ -838,7 +850,7 @@ namespace DataView
         {
             if (_index <= 0)
             {
-                MessageWindow.Show("No More Image");
+                MessageWindow.ShowDialog("No More Image", this);
                 return;
             }
             else
@@ -855,6 +867,8 @@ namespace DataView
         private void ImportData(object sender, RoutedEventArgs e)
         {
             ImportDataDialog win = new ImportDataDialog();
+            win.Owner = this;
+            win.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             win.ShowDialog(); // 模态方式显示
 
             string _alarmImagePath = ImportDataDialog.alarmImagePath;
@@ -862,7 +876,7 @@ namespace DataView
             string _xmlFile = ImportDataDialog.xmlFile;
             if (_alarmImagePath == null || _videoPath == null || _xmlFile == null)
             {
-                MessageWindow.Show("初始化数据失败:\n" + _alarmImagePath + "\n" + _videoPath + "\n" + _xmlFile);
+                MessageWindow.ShowDialog("初始化数据失败:\n" + _alarmImagePath + "\n" + _videoPath + "\n" + _xmlFile, this);
                 return;
             }
             dataWindow?.Init();  // 初始化数据窗口
@@ -874,7 +888,7 @@ namespace DataView
         {
             if (!File.Exists("./data.db"))
             {
-                MessageWindow.Show("文件 data.db 不存在");
+                MessageWindow.ShowDialog("文件 data.db 不存在", this);
                 return;
             }
 
@@ -904,18 +918,46 @@ namespace DataView
             if (openFileDialog.ShowDialog() == true)
             {
                 fileName = openFileDialog.FileName;
-                if (fileName == null || fileName.Length == 0)
-                {
-                    return;
-                }
             }
-            MessageWindow.Show(fileName);
+            if (fileName == null || fileName.Length == 0)
+            {
+                return;
+            }
+
+            string _dbPath = "Data Source = " + fileName;
+            SQLiteCommand cmd = new SQLiteCommand
+            {
+                Connection = new SQLiteConnection(_dbPath),
+                CommandText = "SELECT * FROM AlarmImageTab WHERE state != 0"
+            };
+
+            List<AlarmDataItem> _alarmImageList = new List<AlarmDataItem>();
+            using (SQLiteDataReader dataReader = cmd.ExecuteReader())
+            {
+                while (dataReader.Read())
+                {
+                    var _alarmDataItem = new AlarmDataItem
+                    {
+                        ID = dataReader.GetInt32(0),
+                        ImagePath = dataReader.GetString(1),
+                        Scene = dataReader.GetString(2),
+                        Incident = dataReader.GetString(3),
+                        Video = dataReader.GetString(4),
+                        Frame = dataReader.GetInt32(5),
+                        State = (DetectType)(dataReader.GetInt32(6)),
+                        Count = dataReader.GetInt32(7)
+                    };
+
+                    _alarmImageList.Add(_alarmDataItem);
+                }
+                cmd.Connection.Close();
+            }
         }
 
         // 关于
         private void AboutInfo(object sender, RoutedEventArgs e)
         {
-            MessageWindow.Show(_aboutInfo);
+            MessageWindow.ShowDialog(_aboutInfo, this);
         }
 
         private void MouseEnter_RadioBtn(object sender, MouseEventArgs e)

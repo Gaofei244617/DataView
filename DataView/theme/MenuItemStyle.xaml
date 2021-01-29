@@ -35,7 +35,8 @@
                             <ScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" 
                                           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <Border Name="SubmenuBorder" 
-                                        Background="#ffc787"                                         
+                                        CornerRadius="5"
+                                        Background="White"                                         
                                         BorderBrush="LightGray" 
                                         BorderThickness="1" 
                                         SnapsToDevicePixels="True">
@@ -58,5 +59,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style BasedOn="{StaticResource MenuItemStyle}" TargetType="{x:Type MenuItem}"/>
 
 </ResourceDictionary>

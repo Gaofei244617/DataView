@@ -251,6 +251,12 @@
     <Resource Include="theme\video.png" />
     <Resource Include="theme\xml.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="theme\setting.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="theme\find.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
