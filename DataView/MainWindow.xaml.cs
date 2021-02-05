@@ -2,16 +2,23 @@
 using Panuon.UI.Silver;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml;
+using Alphaleonis.Win32.Filesystem;
+using File = Alphaleonis.Win32.Filesystem.File;
+using Path = Alphaleonis.Win32.Filesystem.Path;
+using FileInfo = Alphaleonis.Win32.Filesystem.FileInfo;
+using Directory = Alphaleonis.Win32.Filesystem.Directory;
 
 namespace DataView
 {
@@ -170,6 +177,7 @@ namespace DataView
                 // 告警图片
                 if (alarmImagePath != null && alarmImagePath.Length > 0)
                 {
+                    SetImageTreeView(alarmImagePath); // 告警图片目录树
                     this.Title = "Start to import alarm images ...";
                     string[] alarmImages = Utility.Director(alarmImagePath).Where(f =>
                     {
@@ -259,7 +267,35 @@ namespace DataView
             }
         }
 
-        private void InitDataBase()
+        // 创建空数据表
+        private void CreateBlankTabs()
+        {
+            string dbPath = "Data Source = " + AppDomain.CurrentDomain.BaseDirectory + @"data.db";
+            dbConnection = new SQLiteConnection(dbPath);
+            if (dbConnection == null)
+            {
+                MessageWindow.ShowDialog("无法连接到数据库", this);
+                return;
+            }
+            dbConnection.Open();
+
+            SQLiteCommand cmd = new SQLiteCommand { Connection = dbConnection };
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS DataPathTab(Item VARCHAR(64) PRIMARY KEY, Path VARCHAR(512))";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS AlarmImageTab" +
+                "(id INTEGER, image VARCHAR(512) PRIMARY KEY, scene VARCHAR(64), incident VARCHAR(64), video VARCHAR(256), frame INTEGER, state INTEGER, count INTEGER)";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS TestVideoTab(VideoName VARCHAR(256), Directory VARCHAR(256))";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS VideoInfoTab(Scene VARCHAR(64), Video VARCHAR(256), Incident VARCHAR(64), Count INTEGER)";
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
+        }
+
+        private void InitDataBase(string alarmImagePath, string videoPath, string xmlFile)
         {
             dbConnection?.Close();
             dbConnection = null;
@@ -278,24 +314,25 @@ namespace DataView
                 }
             }
 
-            /********************* 创建AlarmImageTab ********************/
-            this.Title = "Start to create table AlarmImageTab ...";
-            string DBPath = "Data Source = " + AppDomain.CurrentDomain.BaseDirectory + @"data.db";
-            dbConnection = new SQLiteConnection(DBPath);
-            if (dbConnection == null)
-            {
-                MessageWindow.Show("无法连接到数据库 data.db");
-                return;
-            }
-            dbConnection.Open();
+            // 创建数据表
+            CreateBlankTabs();
 
+            /********************* DataPathTab 数据更新 ********************/
             SQLiteCommand cmd = new SQLiteCommand();
             cmd.Connection = dbConnection;
-            // 创建数据表
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS AlarmImageTab" +
-                "(id INTEGER, image VARCHAR(256) PRIMARY KEY, scene VARCHAR(32), incident VARCHAR(32), video VARCHAR(128), frame INTEGER, state INTEGER, count INTEGER)";
+
+            cmd.CommandText = "BEGIN";
             cmd.ExecuteNonQuery();
-            // 插入数据
+            cmd.CommandText = string.Format($"INSERT INTO DataPathTab(Item, Path) VALUES ('AlarmImagePath', '{alarmImagePath}')");
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = string.Format($"INSERT INTO DataPathTab(Item, Path) VALUES ('VideoPath', '{videoPath}')");
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = string.Format($"INSERT INTO DataPathTab(Item, Path) VALUES ('VideoInfoFilePath', '{xmlFile}')");
+            cmd.ExecuteNonQuery();
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
+
+            /********************* AlarmImageTab 数据更新 ********************/
             cmd.CommandText = "BEGIN";
             cmd.ExecuteNonQuery();
             foreach (var item in alarmImageList)
@@ -307,11 +344,7 @@ namespace DataView
             cmd.CommandText = "COMMIT";
             cmd.ExecuteNonQuery();
 
-            /**************************创建TestVideoTab************************************/
-            this.Title = "Start to create table TestVideoTab ...";
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS TestVideoTab(VideoName VARCHAR(128) PRIMARY KEY, Directory VARCHAR(128))";
-            cmd.ExecuteNonQuery();
-            // 插入数据
+            /************************** TestVideoTab 数据更新 ************************************/
             cmd.CommandText = "BEGIN";
             cmd.ExecuteNonQuery();
             foreach (var item in testVideoList)
@@ -322,11 +355,7 @@ namespace DataView
             cmd.CommandText = "COMMIT";
             cmd.ExecuteNonQuery();
 
-            /**************************创建MarkVideoTab************************************/
-            this.Title = "Start to create table TestVideoTab ...";
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS VideoInfoTab(Scene VARCHAR(32), Video VARCHAR(128), Incident VARCHAR(32), Count INTEGER)";
-            cmd.ExecuteNonQuery();
-            // 插入数据
+            /************************** MarkVideoTab 数据更新 ************************************/
             cmd.CommandText = "BEGIN";
             cmd.ExecuteNonQuery();
             foreach (var item in videoInfoList)
@@ -342,7 +371,7 @@ namespace DataView
         public void InitData(string alarmImagePath, string videoPath, string xmlFile)
         {
             InitMemoryData(alarmImagePath, videoPath, xmlFile);
-            InitDataBase();
+            InitDataBase(alarmImagePath, videoPath, xmlFile);
             if (alarmImageList.Count > 0)
             {
                 _index = alarmImageList[0].ID;
@@ -355,7 +384,7 @@ namespace DataView
         {
             if (!File.Exists("./data.db"))
             {
-                InitDataBase();
+                CreateBlankTabs();
                 return;
             }
 
@@ -370,6 +399,23 @@ namespace DataView
 
             SQLiteCommand cmd = new SQLiteCommand();
             cmd.Connection = dbConnection; // 连接数据库
+
+            cmd.CommandText = "SELECT * FROM DataPathTab WHERE Item = 'AlarmImagePath'";
+            using (SQLiteDataReader dataReader = cmd.ExecuteReader())
+            {
+                if (dataReader.Read())
+                {
+                    string _imagePath = dataReader.GetString(1);
+                    if (Directory.Exists(_imagePath))
+                    {
+                        SetImageTreeView(_imagePath);
+                    }
+                    else
+                    {
+                        MessageWindow.ShowDialog("无法访问告警图片路径 [" + _imagePath + "]");
+                    }
+                }
+            }
 
             // 标注视频
             this.Title = "Start to read data frome VideoInfoTab ...";
@@ -416,7 +462,7 @@ namespace DataView
             {
                 while (dataReader.Read())
                 {
-                    //(id INTEGER, image VARCHAR(256) PRIMARY KEY, scene VARCHAR(32), incident VARCHAR(32), video VARCHAR(128), frame INTEGER, state INTEGER)
+                    //(id INTEGER, image VARCHAR(512) PRIMARY KEY, scene VARCHAR(64), incident VARCHAR(64), video VARCHAR(256), frame INTEGER, state INTEGER)
                     int _id = dataReader.GetInt32(0);
                     string _imgPath = dataReader.GetString(1);
                     string _scene = dataReader.GetString(2);
@@ -461,7 +507,7 @@ namespace DataView
             {
                 while (dataReader.Read())
                 {
-                    //(VideoName VARCHAR(128) PRIMARY KEY, Directory VARCHAR(128))
+                    //(VideoName VARCHAR(256) PRIMARY KEY, Directory VARCHAR(256))
                     string _videoName = dataReader.GetString(0);
                     string _videoPath = dataReader.GetString(1);
                     var _testVideoItem = new TestVideoItem { VideoName = _videoName, VideoPath = _videoPath };
@@ -492,7 +538,20 @@ namespace DataView
         // 显示图片
         private void ShowAlarmImage(AlarmDataItem alarmImage)
         {
-            imgView.Source = new BitmapImage(new Uri(alarmImage.ImagePath, UriKind.RelativeOrAbsolute));
+            if (!File.Exists(alarmImage.ImagePath))
+            {
+                return;
+            }
+            if (alarmImage.ImagePath.Length > 240)  // 规避文件名和路径名过长问题
+            {
+                FileInfo fi = new FileInfo(alarmImage.ImagePath);
+                fi.CopyTo("temp.jpg", true);
+                imgView.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"temp.jpg", UriKind.RelativeOrAbsolute));
+            }
+            else
+            {
+                imgView.Source = new BitmapImage(new Uri(alarmImage.ImagePath, UriKind.RelativeOrAbsolute));
+            }
             this.Title = "[" + (_index + 1) + "/" + alarmImageList.Count + "] " + Path.GetFileName(alarmImage.ImagePath);
             int _detCount = alarmImage.Count;
 
@@ -634,7 +693,7 @@ namespace DataView
         }
 
         // 识别正检/误检
-        private void Click_JudgeBtn(object sender, RoutedEventArgs e)
+        private void SetImageStateClick(object sender, RoutedEventArgs e)
         {
             this.trueDetNumBox.Value = 0;
             this.falseDetNumBox.Value = 0;
@@ -952,6 +1011,39 @@ namespace DataView
                 }
                 cmd.Connection.Close();
             }
+
+            // 合并数据
+            foreach (var item in _alarmImageList)
+            {
+                if (item.State != DetectType.UnKnown)
+                {
+                    if (dbConnection == null)
+                    {
+                        MessageWindow.ShowDialog("无法连接到数据库", this);
+                        return;
+                    }
+
+                    var imgs = alarmImageList.Where(f => Path.GetFileName(f.ImagePath) == Path.GetFileName(item.ImagePath)).ToList();
+                    cmd = new SQLiteCommand { Connection = dbConnection };
+                    if (imgs.Count == 0)
+                    {
+                        alarmImageList.Add(item);
+                        // 更新数据库
+                        cmd.CommandText = string.Format($"INSERT INTO AlarmImageTab(id, image, scene, incident, video, frame, state, count)" +
+                            $" VALUES ('{item.ID}', '{item.ImagePath}','{item.Scene}','{item.Incident}', '{item.Video}', '{item.Frame}', '{(int)item.State}', '{item.Count}')");
+                        cmd.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        imgs[0].State = item.State;
+                        imgs[0].Count = item.Count;
+                        // 更新数据库
+                        cmd.CommandText = string.Format($"UPDATE AlarmImageTab SET state = '{(int)item.State}', count = '{item.Count}' WHERE image = '{alarmImageList[_index].ImagePath}'");
+                        cmd.ExecuteNonQuery();
+                    }
+                    dataWindow.UpdateAlarmImageItem(item);
+                }
+            }
         }
 
         // 关于
@@ -968,6 +1060,35 @@ namespace DataView
         private void MouseLeave_RadioBtn(object sender, MouseEventArgs e)
         {
             (sender as RadioButton).FontWeight = FontWeights.Normal;
+        }
+
+        private void TreeViewRightClick(object sender, MouseButtonEventArgs e)
+        {
+            var item = ImageTreeView.SelectedItem as FileRecord;
+            if (item == null)
+            {
+                return;
+            }
+            ContextMenu cm = this.TryFindResource("TreeMenu") as ContextMenu;
+            cm.Placement = PlacementMode.MousePoint;
+            cm.IsOpen = true;
+        }
+
+        // 显示告警图片目录树
+        void SetImageTreeView(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                var tree = new ObservableCollection<FileRecord>
+                {
+                    new FileRecord { Info = new DirAndFileInfo { FullName = path } }
+                };
+                ImageTreeView.ItemsSource = tree;
+            }
+            else
+            {
+                MessageWindow.ShowDialog("告警图片文件夹 [" + path + "] 不存在", this);
+            }
         }
 
         // 关闭窗口

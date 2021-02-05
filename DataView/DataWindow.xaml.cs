@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +16,7 @@ using LiveCharts;
 using LiveCharts.Wpf;
 using System.Collections.ObjectModel;
 using LiveCharts.Defaults;
+using Path = System.IO.Path;
 
 namespace DataView
 {
@@ -64,7 +66,7 @@ namespace DataView
 
         public void UpdateAlarmImageItem(AlarmDataItem item)
         {
-            var _list = alarmImageData.Where(f => f.ImagePath == item.ImagePath).ToList();
+            var _list = alarmImageData.Where(f =>Path.GetFileName(f.ImagePath) == Path.GetFileName(item.ImagePath)).ToList();
             if (_list.Count == 0)
             {
                 alarmImageData.Add(item);
