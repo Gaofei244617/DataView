@@ -5,6 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using File = Alphaleonis.Win32.Filesystem.File;
+using Path = Alphaleonis.Win32.Filesystem.Path;
+using FileInfo = Alphaleonis.Win32.Filesystem.FileInfo;
+using Directory = Alphaleonis.Win32.Filesystem.Directory;
 
 namespace DataView
 {

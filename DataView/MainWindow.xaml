@@ -16,13 +16,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
-                <ResourceDictionary Source="pack://application:,,,/Panuon.UI.Silver;component/Control.xaml"/>
                 <ResourceDictionary Source="theme/ExpandStoryboard.xaml"/>
                 <ResourceDictionary Source="theme/ButtonStyle.xaml"/>
                 <ResourceDictionary Source="theme/MenuItemStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <ContextMenu x:Key="TreeMenu">
-                <MenuItem Header="统计数据"/>
+                <MenuItem Header="统计数据" Click="CountDataClick"/>
             </ContextMenu>
         </ResourceDictionary>
     </Window.Resources>
@@ -34,28 +33,35 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="160"/>
         </Grid.ColumnDefinitions>
 
         <Menu Margin="0,0,0,1" 
               Padding="0,0,0,0"
               BorderThickness="0"
               HorizontalContentAlignment="Left"
-              HorizontalAlignment="Left" Width="867"
               VerticalContentAlignment="Center"
-              Grid.ColumnSpan="2" >
+              Grid.ColumnSpan="2" 
+              HorizontalAlignment="Left" Width="867" Background="White">
+
+            <Menu.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="pack://application:,,,/Panuon.UI.Silver;component/Control.xaml"/>
+                        <ResourceDictionary Source="theme/MenuItemStyle.xaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </Menu.Resources>
 
             <MenuItem Header="导入数据" Width="90" FontSize="12" Icon="import.png">
-                <MenuItem Header="初始化数据" Height="30" Icon="all.png" Click="ImportData"/>
+                <MenuItem Header="初始化数据" Height="30" Icon="all.png" Click="ImportDataClick"/>
                 <MenuItem Header="更新告警图片" Height="30" Icon="image.png"/>
                 <MenuItem Header="更新测试视频" Height="30" Icon="video.png"/>
                 <MenuItem Header="更新视频标注" Height="30" Icon="xml.png"/>
             </MenuItem>
             <MenuItem Header="导出数据" Width="90" FontSize="12" Icon="export.png" Click="ExportData"/>
             <MenuItem Header="合并外部数据" FontSize="12" Icon="merge.png" Click="MergeData"/>
-            <MenuItem Header="设置" Width="60" FontSize="12" Icon="setting.png">
-                <MenuItem Header="图片查找路径" Height="30" Icon="find.png"/>
-            </MenuItem>
+            <MenuItem Header="设置" Width="60" FontSize="12" Icon="setting.png"/>
             <MenuItem Header="关于" FontSize="12" Width="60" Icon="about.png" Click="AboutInfo"/>
         </Menu>
 
@@ -68,19 +74,19 @@
                               Icon="folder.png" 
                               Height="25"
                               Style="{StaticResource MenuItemStyle}" 
-                              Click="OpenImageDir"/>
+                              Click="OpenImageDirClick"/>
                     <Separator BorderBrush="LightGray"/>
                     <MenuItem Header="打开视频位置" 
                               Icon="folder.png" 
                               Height="25"
                               Style="{StaticResource MenuItemStyle}" 
-                              Click="OpenVideoDir"/>
+                              Click="OpenVideoDirClick"/>
                     <Separator BorderBrush="LightGray"/>
                     <MenuItem Header="播放视频" 
                               Icon="play.png"
                               Height="25"
                               Style="{StaticResource MenuItemStyle}" 
-                              Click="OpenVideo"/>
+                              Click="OpenVideoClick"/>
                 </ContextMenu>
             </Image.ContextMenu>
         </Image>
@@ -90,7 +96,7 @@
                 Width="75" Height="300" 
                 Style="{StaticResource ImageBtnStyle}" 
                 Margin="0,68,0,125" 
-                Click="NextImage_Click" 
+                Click="NextImageClick" 
                 Grid.Row="1">
             <Button.Background>
                 <ImageBrush ImageSource="theme/right.png" Stretch="Uniform"/>
@@ -102,7 +108,7 @@
                 Width="75" Height="300" 
                 Style="{StaticResource ImageBtnStyle}" 
                 Margin="0,68,0,125" 
-                Click="PreImage_Click" 
+                Click="PreImageClick" 
                 Grid.Row="1">
             <Button.Background>
                 <ImageBrush ImageSource="theme/left.png" Stretch="Uniform"/>
@@ -123,8 +129,15 @@
 
         <TabControl pu:TabControlHelper.SelectedForeground="Black" Foreground="Gray" Grid.Row="1" Grid.Column="1">
             <TabItem Header="统计">
+                <TabItem.Resources>
+                    <ResourceDictionary>
+                        <ResourceDictionary.MergedDictionaries>
+                            <ResourceDictionary Source="pack://application:,,,/Panuon.UI.Silver;component/Control.xaml"/>
+                        </ResourceDictionary.MergedDictionaries>
+                    </ResourceDictionary>
+                </TabItem.Resources>
                 <Grid>
-                    <Grid Margin="25,10,20,0" Height="25" VerticalAlignment="Top" >
+                    <Grid Margin="10,10,20,0" Height="38" VerticalAlignment="Top" >
                         <Label Content="场景" 
                                Padding="0,0,0,0" 
                                BorderBrush="White" 
@@ -132,16 +145,13 @@
                                VerticalContentAlignment="Center" 
                                Height="25" Width="34" 
                                FontWeight="SemiBold"/>
-                        <ComboBox x:Name="SceneComBox" Margin="39,0,0,0" 
+                        <ComboBox x:Name="SceneComBox" Margin="39,4,0,4" Padding="3,0,3,0"
                                   FontSize="12"
-                                  pu:ComboBoxHelper.HoverBackground="#1E282828"
-                                  pu:ComboBoxHelper.SelectedBackground="#32282828"
                                   VerticalContentAlignment="Center" 
-                                  Height="25" 
-                                  SelectionChanged="SceneChanged"/>
+                                  SelectionChanged="SceneChanged" />
                     </Grid>
 
-                    <Grid Margin="25,52,20,0" Height="25" VerticalAlignment="Top">
+                    <Grid Margin="10,52,20,0" Height="38" VerticalAlignment="Top">
                         <Label Content="事件" 
                                Padding="0,0,0,0" 
                                BorderBrush="White"
@@ -149,15 +159,14 @@
                                VerticalContentAlignment="Center" 
                                Height="25" Width="34" 
                                FontWeight="SemiBold"/>
-                        <ComboBox x:Name="IncidentComBox" Margin="39,0,0,0" 
-                                  pu:ComboBoxHelper.HoverBackground="#1E282828"
-                                  pu:ComboBoxHelper.SelectedBackground="#32282828"
+                        <ComboBox x:Name="IncidentComBox" Margin="39,4,0,4" Padding="3,0,3,0"
                                   VerticalContentAlignment="Center" 
-                                  Height="25" 
                                   SelectionChanged="IncidentChanged"/>
                     </Grid>
 
-                    <Grid Grid.Column="1" Margin="25,95,10,0" Height="110" VerticalAlignment="Top">
+                    <Grid Margin="15,0,20,90" Height="140" VerticalAlignment="Center">
+                        <Grid.Resources>
+                        </Grid.Resources>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="20*"/>
                             <RowDefinition Height="20*"/>
@@ -231,32 +240,36 @@
                     </Grid>
 
                     <Button Content="统计结果" 
-                            Grid.Column="1" 
-                            Margin="25,0,20,41" Height="30" 
+                            Margin="15,0,20,41" Height="30" 
                             pu:ButtonHelper.ButtonStyle="Hollow"
                             pu:ButtonHelper.ClickStyle="Sink"
                             pu:ButtonHelper.HoverBrush="#3F3F3F"
-                            pu:ButtonHelper.CornerRadius="3"
+                            pu:ButtonHelper.CornerRadius="5"
                             BorderBrush="#FF3F3F3F"
                             Foreground="#FF3F3F3F"
-                            Click="DataBtn_Click" 
-                            VerticalAlignment="Bottom" />
+                            Click="ViewDataClick" 
+                            VerticalAlignment="Bottom" 
+			    HorizontalAlignment="Stretch" />
                 </Grid>
             </TabItem>
 
             <TabItem Header="告警图片">
                 <Grid>
-                    <TreeView x:Name="ImageTreeView"
-                              pu:TreeViewHelper.ExpandMode="SingleClick"
-                              pu:TreeViewHelper.SelectedForeground="Green"
-                              pu:TreeViewHelper.ItemHeight="25"
-                              MouseRightButtonUp="TreeViewRightClick">
+                    <Grid.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.MergedDictionaries>
+                                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
+                                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+                            </ResourceDictionary.MergedDictionaries>
+                        </ResourceDictionary>
+                    </Grid.Resources>
+                    <TreeView x:Name="ImageTreeView" MouseRightButtonUp="TreeViewRightClick">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type local:FileRecord}" ItemsSource="{Binding Directories}" >
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Image Source="{Binding Info.Icon}" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform" Width="22"/>
-                                    <!--<Label Content="{Binding Info.Name}" BorderBrush="Transparent" Padding="0,0,0,0" VerticalContentAlignment="Center"/>-->
-                                    <TextBlock Text="{Binding Info.Name}" Padding="0,0,0,0" TextAlignment="Center"/>
+                                    <Label Content="{Binding Info.Name}" BorderBrush="Transparent" Background="Transparent" Padding="0,0,0,0" VerticalContentAlignment="Center"/>
+                                    <!--<TextBlock Text="{Binding Info.Name}" Padding="0,0,0,0" TextAlignment="Center"/>-->
                                 </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
