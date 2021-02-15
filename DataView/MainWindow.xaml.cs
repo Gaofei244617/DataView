@@ -90,6 +90,13 @@ namespace DataView
                 MessageWindow.ShowDialog("Can not read MetaData.xml", this);
             }
 
+            // 删除临时数据
+            if (Directory.Exists("./temp"))
+            {
+                Directory.Delete("./temp", true);
+            }
+
+            // 恢复上次程序退出前状态
             Resume();
         }
 
@@ -550,7 +557,10 @@ namespace DataView
                 }
                 FileInfo fi = new FileInfo(alarmImage.ImagePath);
                 string _tmp = Path.GetFileName(alarmImage.ImagePath);
-                fi.CopyTo("./temp/" + _tmp, true);
+                if (!File.Exists("./temp/" + _tmp))
+                {
+                    fi.CopyTo("./temp/" + _tmp, true);
+                }
                 imgView.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"./temp/" + _tmp, UriKind.RelativeOrAbsolute));
             }
             else
