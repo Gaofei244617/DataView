@@ -239,17 +239,17 @@
                                      MouseLeave="MouseLeave_RadioBtn"/>
                     </Grid>
 
-                    <Button Content="统计结果" 
+                    <Button Content="查看数据" 
                             Margin="15,0,20,41" Height="30" 
                             pu:ButtonHelper.ButtonStyle="Hollow"
                             pu:ButtonHelper.ClickStyle="Sink"
-                            pu:ButtonHelper.HoverBrush="#3F3F3F"
+                            pu:ButtonHelper.HoverBrush="#004FFF"
                             pu:ButtonHelper.CornerRadius="5"
-                            BorderBrush="#FF3F3F3F"
-                            Foreground="#FF3F3F3F"
+                            BorderBrush="#FF004FFF"
+                            Foreground="#FF004FFF"
                             Click="ViewDataClick" 
                             VerticalAlignment="Bottom" 
-			    HorizontalAlignment="Stretch" />
+                            HorizontalAlignment="Stretch" />
                 </Grid>
             </TabItem>
 

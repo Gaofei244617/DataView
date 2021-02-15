@@ -24,14 +24,14 @@ namespace DataView
 {
     public partial class MainWindow : Window
     {
-        private string _aboutInfo = "交通事件指标统计系统" + "\n" + "版 本: V0.9";
+        private string _aboutInfo = "交通事件指标统计系统" + "\n" + "版 本: V1.0";
         private DataWindow dataWindow = new DataWindow();
 
         public static Dictionary<string, string> SceneDict = new Dictionary<string, string>();
         public static Dictionary<string, string> IncidentDict = new Dictionary<string, string>();
 
-        private List<AlarmDataItem> alarmImageListAll = new List<AlarmDataItem>();   // 所有告警图片
-        private List<AlarmDataItem> alarmImageList = new List<AlarmDataItem>();      // 正在统计的告警图片
+        private readonly List<AlarmDataItem> alarmImageListAll = new List<AlarmDataItem>();   // 所有告警图片
+        private readonly List<AlarmDataItem> alarmImageList = new List<AlarmDataItem>();      // 正在统计的告警图片
         private readonly List<VideoInfoItem> videoInfoList = new List<VideoInfoItem>();    // 视频应报事件
         private readonly List<TestVideoItem> testVideoList = new List<TestVideoItem>();    // 测试视频(视频名，所在路径)
 
@@ -99,6 +99,7 @@ namespace DataView
             {
                 // 数据初始化
                 alarmImageListAll.Clear();
+                alarmImageList.Clear();
                 videoInfoList.Clear();
                 testVideoList.Clear();
                 SceneComBox.Items.Clear();
@@ -543,9 +544,14 @@ namespace DataView
             }
             if (alarmImage.ImagePath.Length > 240)  // 规避文件名和路径名过长问题
             {
+                if (!Directory.Exists("./temp"))
+                {
+                    Directory.CreateDirectory("./temp");
+                }
                 FileInfo fi = new FileInfo(alarmImage.ImagePath);
-                fi.CopyTo("temp.jpg", true);
-                imgView.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"temp.jpg", UriKind.RelativeOrAbsolute));
+                string _tmp = Path.GetFileName(alarmImage.ImagePath);
+                fi.CopyTo("./temp/" + _tmp, true);
+                imgView.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"./temp/" + _tmp, UriKind.RelativeOrAbsolute));
             }
             else
             {
@@ -643,7 +649,7 @@ namespace DataView
 
             if (!flag)
             {
-                MessageWindow.ShowDialog("无法打开视频 [" + alarmImageListAll[_index].Video + "] 所在位置！", this);
+                MessageWindow.ShowDialog("无法打开视频 [" + alarmImageList[_index].Video + "] 所在位置！", this);
             }
         }
 
@@ -663,7 +669,7 @@ namespace DataView
 
             if (!flag)
             {
-                MessageWindow.ShowDialog("未找到视频 [" + alarmImageListAll[_index].Video + "]", this);
+                MessageWindow.ShowDialog("未找到视频 [" + alarmImageList[_index].Video + "]", this);
             }
         }
 
@@ -676,7 +682,8 @@ namespace DataView
                 SQLiteCommand cmd = new SQLiteCommand
                 {
                     Connection = dbConnection,
-                    CommandText = string.Format($"UPDATE AlarmImageTab SET state = '{(int)_state}', count = '{_detCount}' WHERE image = '{alarmImageList[_index].ImagePath}'")
+                    CommandText = string.Format($"UPDATE AlarmImageTab SET scene = '{item.Scene}', incident = '{item.Incident}', state = '{(int)item.State}', count = '{item.Count}' " +
+                    $"WHERE image = '{alarmImageList[_index].ImagePath}'")
                 };
                 cmd.ExecuteNonQuery();
             }
@@ -863,8 +870,8 @@ namespace DataView
                 var _list = SceneDict.Where(f => f.Value == _scene).ToList();
                 if (_list.Count > 0)
                 {
-                    alarmImageListAll[_index].Scene = _list[0].Key;
-                    UpdateData(alarmImageListAll[_index]);
+                    alarmImageList[_index].Scene = _list[0].Key;
+                    UpdateData(alarmImageList[_index]);
                 }
             }
         }
@@ -882,8 +889,8 @@ namespace DataView
                 var _list = IncidentDict.Where(f => f.Value == _incident).ToList();
                 if (_list.Count > 0)
                 {
-                    alarmImageListAll[_index].Incident = _list[0].Key;
-                    UpdateData(alarmImageListAll[_index]);
+                    alarmImageList[_index].Incident = _list[0].Key;
+                    UpdateData(alarmImageList[_index]);
                 }
             }
         }
@@ -1038,7 +1045,7 @@ namespace DataView
                         imgs[0].State = item.State;
                         imgs[0].Count = item.Count;
                         // 更新数据库
-                        cmd.CommandText = string.Format($"UPDATE AlarmImageTab SET state = '{(int)item.State}', count = '{item.Count}' WHERE image = '{alarmImageListAll[_index].ImagePath}'");
+                        cmd.CommandText = string.Format($"UPDATE AlarmImageTab SET state = '{(int)item.State}', count = '{item.Count}' WHERE image = '{ imgs[0].ImagePath}'");
                         cmd.ExecuteNonQuery();
                     }
                     dataWindow.UpdateAlarmImageItem(item);
@@ -1091,7 +1098,7 @@ namespace DataView
             }
         }
 
-        // 统计数据
+        // 统计数据(TreeView ContextMenu)
         private void CountDataClick(object sender, RoutedEventArgs e)
         {
             var treeViewItem = ImageTreeView.SelectedItem as FileRecord;
@@ -1132,7 +1139,7 @@ namespace DataView
         // 关闭窗口
         private void OnWindowClose(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            dataWindow.terminate(); // 关闭数据展示窗口
+            dataWindow.Terminate(); // 关闭数据展示窗口
             dbConnection?.Close();  // 关闭数据库连接
         }
     }
