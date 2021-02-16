@@ -30,10 +30,10 @@ namespace DataView
         public static Dictionary<string, string> SceneDict = new Dictionary<string, string>();
         public static Dictionary<string, string> IncidentDict = new Dictionary<string, string>();
 
-        private readonly List<AlarmDataItem> alarmImageListAll = new List<AlarmDataItem>();   // 所有告警图片
-        private readonly List<AlarmDataItem> alarmImageList = new List<AlarmDataItem>();      // 正在统计的告警图片
-        private readonly List<VideoInfoItem> videoInfoList = new List<VideoInfoItem>();    // 视频应报事件
-        private readonly List<TestVideoItem> testVideoList = new List<TestVideoItem>();    // 测试视频(视频名，所在路径)
+        private List<AlarmDataItem> alarmImageListAll = new List<AlarmDataItem>();   // 所有告警图片
+        private List<AlarmDataItem> alarmImageList = new List<AlarmDataItem>();      // 正在统计的告警图片
+        private List<VideoInfoItem> videoInfoList = new List<VideoInfoItem>();    // 视频应报事件
+        private List<TestVideoItem> testVideoList = new List<TestVideoItem>();    // 测试视频(视频名，所在路径)
 
         private int _index = -1;          // 当前告警图片索引
         private DetectType _state = 0;    // 告警状态
@@ -100,166 +100,229 @@ namespace DataView
             Resume();
         }
 
+        // 成员变量初始化
+        public void InitData()
+        {
+            alarmImageListAll.Clear();
+            alarmImageList.Clear();
+            videoInfoList.Clear();
+            testVideoList.Clear();
+            imgView.Source = null;
+            _index = -1;
+            _state = 0;
+            _detCount = 0;
+        }
+
+        // 解析视频标注文件
+        private List<VideoInfoItem> ParseXml(string xmlFile)
+        {
+            if (File.Exists(xmlFile))
+            {
+                List<VideoInfoItem> videos = new List<VideoInfoItem>();
+                XmlDocument doc = new XmlDocument();
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreComments = true;  // 忽略文档里面的注释
+                XmlReader reader = XmlReader.Create(xmlFile, settings);
+                doc.Load(reader);
+                XmlNode xn = doc.SelectSingleNode("root"); // 根节点
+                XmlNodeList xnl = xn.ChildNodes;  // 根节点的子节点
+                foreach (XmlNode node in xnl)
+                {
+                    string _video = node.Attributes["name"].Value;
+                    string _scene = node.Attributes["scene"].Value;
+                    XmlNodeList subNodes = node.ChildNodes;
+                    if (subNodes.Count > 0)
+                    {
+                        foreach (XmlNode item in subNodes)
+                        {
+                            string _incident = item.Name;
+                            int _count = item.InnerText.ToInt().Value;
+                            var _videoInfoItem = new VideoInfoItem
+                            {
+                                Scene = _scene,
+                                VideoName = _video,
+                                Incident = _incident,
+                                Count = _count
+                            };
+                            videos.Add(_videoInfoItem);
+                        }
+                    }
+                    else // 无事件发生
+                    {
+                        var _videoInfoItem = new VideoInfoItem
+                        {
+                            Scene = _scene,
+                            VideoName = _video,
+                            Incident = "null",
+                            Count = 0
+                        };
+                        videos.Add(_videoInfoItem);
+                    }
+                }
+                reader.Close();
+                return videos;
+            }
+            else
+            {
+                MessageWindow.ShowDialog("无法访问文件 [" + xmlFile + "]");
+            }
+
+            return null;
+        }
+
+        // 解析告警图片文件夹
+        private List<AlarmDataItem> ParseAlarmImage(string alarmImagePath)
+        {
+            if (Directory.Exists(alarmImagePath))
+            {
+                List<AlarmDataItem> images = new List<AlarmDataItem>();
+                // 递归获取所有jpg文件
+                string[] alarmImages = Utility.Director(alarmImagePath).Where(f =>
+                {
+                    string ex = Path.GetExtension(f);
+                    return (ex == ".jpg" || ex == ".png" || ex == ".bmp");
+                }).ToArray();
+
+                // 图片命名方式: 视频名___事件_帧号.jpg
+                int _id = 0;
+                foreach (string img in alarmImages)
+                {
+                    string name = Path.GetFileNameWithoutExtension(img);
+                    string[] strs = Regex.Split(name, "___", RegexOptions.IgnoreCase);
+                    if (strs.Length < 2)
+                    {
+                        MessageWindow.Show("告警图片命名格式错误\n" + img, this);
+                        continue;
+                    }
+                    string[] infos = strs[1].Split('_');
+                    string _scene;
+                    string _incident = infos[0];
+                    string _video = strs[0];
+                    var _list = videoInfoList.Where(f => Path.GetFileNameWithoutExtension(f.VideoName) == _video).ToList();
+                    if (_list.Count > 0)
+                    {
+                        _video = _list[0].VideoName;
+                        _scene = _list[0].Scene;
+                    }
+                    else
+                    {
+                        _video += ".h264";
+                        _scene = "UnKnown";
+                    }
+                    if (!SceneDict.ContainsKey(_scene))
+                    {
+                        _scene = "UnKnown";
+                    }
+                    if (!IncidentDict.ContainsKey(_incident))
+                    {
+                        _incident = "UnKnown";
+                    }
+
+                    var _alarmDataItem = new AlarmDataItem
+                    {
+                        ID = _id++,
+                        ImagePath = img,
+                        Video = _video,
+                        Scene = _scene,
+                        Incident = _incident,
+                        Frame = Convert.ToInt32(infos[1]),
+                        State = DetectType.UnKnown,
+                        Count = 0
+                    };
+                    images.Add(_alarmDataItem);
+                }
+
+                return images;
+            }
+            else
+            {
+                MessageWindow.ShowDialog("无法访问告警图片文件夹 [" + alarmImagePath + "]", this);
+            }
+            return null;
+        }
+
+        // 解析测试视频
+        private List<TestVideoItem> ParseTestVideo(string videoPath)
+        {
+            if (Directory.Exists(videoPath))
+            {
+                List<TestVideoItem> testVideos = new List<TestVideoItem>();
+                var videos = Utility.Director(videoPath).Where(f =>
+                {
+                    string ex = Path.GetExtension(f);
+                    return (ex == ".ts" || ex == ".mp4" || ex == ".flv" || ex == ".avi");
+                }).ToList();
+
+                foreach (var item in videos)
+                {
+                    var _testVideoItem = new TestVideoItem { VideoName = Path.GetFileName(item), VideoPath = Path.GetDirectoryName(item) };
+                    testVideos.Add(_testVideoItem);
+                }
+
+                return testVideos;
+            }
+            else
+            {
+                MessageWindow.ShowDialog("无法访问文件夹 [" + videoPath + "]", this);
+            }
+
+            return null;
+        }
+
+        // 初始化场景下拉列表
+        private void InitSceneComBox()
+        {
+            this.SceneComBox.Items.Clear();
+            List<string> items = new List<string>();
+            foreach (var it in videoInfoList)
+            {
+                string _scene = it.Scene;
+                if (items.Count(f => f == _scene) == 0)
+                {
+                    items.Add(_scene);
+                    if (!SceneDict.ContainsKey(_scene))
+                    {
+                        SceneDict[_scene] = _scene;
+                    }
+                    this.SceneComBox.Items.Add(new ComboBoxItem { Content = SceneDict[_scene] });
+                }
+            }
+            foreach (var it in alarmImageListAll)
+            {
+                string _scene = it.Scene;
+                if (items.Count(f => f == _scene) == 0)
+                {
+                    items.Add(_scene);
+                    if (!SceneDict.ContainsKey(_scene))
+                    {
+                        SceneDict[_scene] = _scene;
+                    }
+                    this.SceneComBox.Items.Add(new ComboBoxItem { Content = SceneDict[_scene] });
+                }
+            }
+        }
+
         private void InitMemoryData(string alarmImagePath, string videoPath, string xmlFile)
         {
             try
             {
                 // 数据初始化
-                alarmImageListAll.Clear();
-                alarmImageList.Clear();
-                videoInfoList.Clear();
-                testVideoList.Clear();
-                SceneComBox.Items.Clear();
-                _index = -1;
-                _state = 0;
-                _detCount = 0;
+                InitData();
 
                 // 标注文件
-                if (xmlFile != null && xmlFile.Length > 0)
-                {
-                    XmlDocument doc = new XmlDocument();
-                    XmlReaderSettings settings = new XmlReaderSettings();
-                    settings.IgnoreComments = true;  // 忽略文档里面的注释
-                    XmlReader reader = XmlReader.Create(xmlFile, settings);
-                    doc.Load(reader);
-                    XmlNode xn = doc.SelectSingleNode("root"); // 根节点
-                    XmlNodeList xnl = xn.ChildNodes;  // 根节点的子节点
-                    List<string> _tmpComboBoxList = new List<string>();
-                    foreach (XmlNode node in xnl)
-                    {
-                        string _video = node.Attributes["name"].Value;
-                        string _scene = node.Attributes["scene"].Value;
-                        XmlNodeList subNodes = node.ChildNodes;
-                        if (subNodes.Count > 0)
-                        {
-                            foreach (XmlNode item in subNodes)
-                            {
-                                string _incident = item.Name;
-                                int _count = item.InnerText.ToInt().Value;
-                                var _videoInfoItem = new VideoInfoItem
-                                {
-                                    Scene = _scene,
-                                    VideoName = _video,
-                                    Incident = _incident,
-                                    Count = _count
-                                };
-                                videoInfoList.Add(_videoInfoItem);
-                                if (_tmpComboBoxList.Count(f => f == _scene) == 0)
-                                {
-                                    _tmpComboBoxList.Add(_scene);
-                                    var it = new ComboBoxItem();
-                                    it.Content = SceneDict.ContainsKey(_scene) ? SceneDict[_scene] : _scene;
-                                    if (!SceneDict.ContainsKey(_scene))
-                                    {
-                                        SceneDict[_scene] = _scene;
-                                    }
-                                    this.SceneComBox.Items.Add(it);
-                                }
-                            }
-                        }
-                        else // 无事件发生
-                        {
-                            var _videoInfoItem = new VideoInfoItem
-                            {
-                                Scene = _scene,
-                                VideoName = _video,
-                                Incident = "null",
-                                Count = 0
-                            };
-                            videoInfoList.Add(_videoInfoItem);
-                        }
-                    }
-                    reader.Close();
-
-                    // 默认选项
-                    var _comboBoxItem = new ComboBoxItem();
-                    _comboBoxItem.Content = "UnKnown";
-                    SceneDict["UnKnown"] = "UnKnown";
-                    this.SceneComBox.Items.Add(_comboBoxItem);
-                }
+                videoInfoList = ParseXml(xmlFile);
 
                 // 告警图片
-                if (alarmImagePath != null && alarmImagePath.Length > 0)
-                {
-                    SetImageTreeView(alarmImagePath); // 告警图片目录树
-                    this.Title = "Start to import alarm images ...";
-                    string[] alarmImages = Utility.Director(alarmImagePath).Where(f =>
-                    {
-                        string ex = Path.GetExtension(f);
-                        return (ex == ".jpg" || ex == ".png" || ex == ".bmp");
-                    }).ToArray();
-
-                    // 图片命名方式: 视频名___事件_帧号.jpg
-                    this.Title = "Start to parse alarm images ...";
-                    int _id = 0;
-                    foreach (string img in alarmImages)
-                    {
-                        string name = Path.GetFileNameWithoutExtension(img);
-                        string[] strs = Regex.Split(name, "___", RegexOptions.IgnoreCase);
-                        if (strs.Length < 2)
-                        {
-                            MessageWindow.Show("告警图片命名格式错误\n" + img, this);
-                            continue;
-                        }
-                        string[] infos = strs[1].Split('_');
-                        string _scene;
-                        string _incident = infos[0];
-                        string _video = strs[0];
-                        var _list = videoInfoList.Where(f => Path.GetFileNameWithoutExtension(f.VideoName) == _video).ToList();
-                        if (_list.Count > 0)
-                        {
-                            _video = _list[0].VideoName;
-                            _scene = _list[0].Scene;
-                        }
-                        else
-                        {
-                            _video += ".h264";
-                            _scene = "UnKnown";
-                        }
-                        if (!SceneDict.ContainsKey(_scene))
-                        {
-                            _scene = "UnKnown";
-                        }
-                        if (!IncidentDict.ContainsKey(_incident))
-                        {
-                            _incident = "UnKnown";
-                        }
-
-                        var _alarmDataItem = new AlarmDataItem
-                        {
-                            ID = _id++,
-                            ImagePath = img,
-                            Video = _video,
-                            Scene = _scene,
-                            Incident = _incident,
-                            Frame = Convert.ToInt32(infos[1]),
-                            State = DetectType.UnKnown,
-                            Count = 0
-                        };
-                        alarmImageListAll.Add(_alarmDataItem);
-                        dataWindow.AddAlarmImageItem(_alarmDataItem);
-                    }
-                }
+                SetImageTreeView(alarmImagePath); // 告警图片目录树
+                alarmImageListAll = ParseAlarmImage(alarmImagePath);
+                alarmImageListAll?.ForEach(it => dataWindow.AddAlarmImageItem(it));
 
                 // 测试视频
-                this.Title = "Start to import test videos ...";
-                if (videoPath != null && videoPath.Length > 0)
-                {
-                    var videos = Utility.Director(videoPath).Where(f =>
-                    {
-                        string ex = Path.GetExtension(f);
-                        return (ex == ".ts" || ex == ".mp4" || ex == ".flv");
-                    }).ToList();
+                testVideoList = ParseTestVideo(videoPath);
+                testVideoList?.ForEach(it => dataWindow.AddTestVideoItem(it));
 
-                    foreach (var item in videos)
-                    {
-                        string _videoName = Path.GetFileName(item);
-                        string _VideoPath = Path.GetDirectoryName(item);
-                        var _testVideoItem = new TestVideoItem { VideoName = _videoName, VideoPath = _VideoPath };
-                        testVideoList.Add(_testVideoItem);
-                        dataWindow.AddTestVideoItem(_testVideoItem);
-                    }
-                }
+                // 场景下拉框
+                InitSceneComBox();
 
                 // 详细数据
                 dataWindow.SetDetailData(GetDetailData());
@@ -309,11 +372,12 @@ namespace DataView
                 FileInfo fi = new FileInfo("./data.db");
                 try
                 {
-                    fi.MoveTo("./data.db." + ex);
+                    fi.MoveTo("./data.db." + ex, MoveOptions.ReplaceExisting);
                 }
                 catch (IOException e)
                 {
                     MessageWindow.ShowDialog(e.ToString(), this);
+                    return;
                 }
             }
 
@@ -400,11 +464,9 @@ namespace DataView
             cmd.Connection = dbConnection; // 连接数据库
 
             // 标注视频
-            this.Title = "Start to read data frome VideoInfoTab ...";
             cmd.CommandText = "SELECT * FROM VideoInfoTab";
             using (SQLiteDataReader dataReader = cmd.ExecuteReader())
             {
-                List<string> _tmpComboBoxList = new List<string>();
                 while (dataReader.Read())
                 {
                     //VideoDataTab(Scene, Video, Incident, Count)
@@ -421,24 +483,10 @@ namespace DataView
                         Count = _count
                     };
                     videoInfoList.Add(_videoInfoItem);
-                    if (_tmpComboBoxList.Count(f => f == _scene) == 0)
-                    {
-                        _tmpComboBoxList.Add(_scene);
-                        var it = new ComboBoxItem
-                        {
-                            Content = SceneDict.ContainsKey(_scene) ? SceneDict[_scene] : _scene
-                        };
-                        if (!SceneDict.ContainsKey(_scene))
-                        {
-                            SceneDict[_scene] = _scene;
-                        }
-                        this.SceneComBox.Items.Add(it);
-                    }
                 }
             }
 
             // 告警图片
-            this.Title = "Start to read data frome AlarmImageTab ...";
             cmd.CommandText = "SELECT * FROM AlarmImageTab";
             using (SQLiteDataReader dataReader = cmd.ExecuteReader())
             {
@@ -472,7 +520,6 @@ namespace DataView
             }
 
             // 测试视频
-            this.Title = "Start to read data frome TestVideoTab ...";
             cmd.CommandText = "SELECT * FROM TestVideoTab";
             using (SQLiteDataReader dataReader = cmd.ExecuteReader())
             {
@@ -529,6 +576,8 @@ namespace DataView
                 }
             }
 
+            // 初始化场景下拉列表
+            InitSceneComBox();
             // 界面显示图片
             if (alarmImageList.Count > 0)
             {
@@ -621,7 +670,7 @@ namespace DataView
             if (alarmImage.State == DetectType.UnKnown &&
                 videoInfoList.Count(f => f.VideoName == alarmImage.Video) == 0)
             {
-                MessageWindow.Show("告警图片视频不在统计范围" + "\n" + alarmImage.Video, this);
+                MessageWindow.Show("告警图片视频不在统计范围" + "\n" + alarmImage.Video);
             }
 
             UpdateStateLabel(alarmImage.State, alarmImage.Count);
@@ -952,7 +1001,7 @@ namespace DataView
             string _xmlFile = ImportDataDialog.xmlFile;
             if (_alarmImagePath == null || _videoPath == null || _xmlFile == null)
             {
-                MessageWindow.ShowDialog("初始化数据失败:\n" + _alarmImagePath + "\n" + _videoPath + "\n" + _xmlFile, this);
+                MessageWindow.ShowDialog("初始化数据失败", this);
                 return;
             }
             dataWindow?.Init();  // 初始化数据窗口
@@ -995,7 +1044,7 @@ namespace DataView
             {
                 fileName = openFileDialog.FileName;
             }
-            if (fileName == null || fileName.Length == 0)
+            if (string.IsNullOrEmpty(fileName))
             {
                 return;
             }
