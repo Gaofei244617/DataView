@@ -3,20 +3,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DataView"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:pu="clr-namespace:Panuon.UI.Silver;assembly=Panuon.UI.Silver"
-        xmlns:local="clr-namespace:DataView"
-        mc:Ignorable="d" 
+        mc:Ignorable="d"
         Title="DataWindow"
         WindowState="Maximized"
-        Height="600" Width="900" 
+        Height="600" Width="900"
         Closing="OnWindowClose">
 
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
-                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
                 <ResourceDictionary x:Name="GridStyle" Source="theme/GridStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -33,14 +33,14 @@
         <TabControl pu:TabControlHelper.SelectedForeground="Black" Foreground="Gray">
             <TabItem Header="总数据">
                 <Grid>
-                    <DataGrid x:Name="GeneralDataTab" 
-                              ItemsSource="{Binding}" 
-                              AutoGenerateColumns="False" 
-                              IsReadOnly="True" 
-                              AlternationCount="2" 
-                              RowHeaderWidth="0" 
-                              SelectionMode="Extended" 
-                              SelectionUnit="Cell">                        
+                    <DataGrid x:Name="GeneralDataTab"
+                              ItemsSource="{Binding}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternationCount="2"
+                              RowHeaderWidth="0"
+                              SelectionMode="Extended"
+                              SelectionUnit="Cell">
 
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="事 件" Binding="{Binding Incident, Converter={StaticResource IncidentConverter}}" Width="120" FontWeight="SemiBold" ElementStyle="{StaticResource TextStyleLeft}" />
@@ -58,25 +58,25 @@
 
             <TabItem Header="详细数据">
                 <Grid>
-                    <DataGrid x:Name="DetailDataTab" 
-                              ItemsSource="{Binding}" 
-                              AutoGenerateColumns="False" 
-                              IsReadOnly="True" 
-                              AlternationCount="2" 
-                              SelectionMode="Extended" 
+                    <DataGrid x:Name="DetailDataTab"
+                              ItemsSource="{Binding}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternationCount="2"
+                              SelectionMode="Extended"
                               SelectionUnit="Cell"
                               RowHeaderWidth="0">
 
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}, Mode=FindAncestor}}"
-                                                Width="50" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="场 景" Binding="{Binding Scene, Converter={StaticResource SceneConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="事 件" Binding="{Binding Incident, Converter={StaticResource IncidentConverter}}" Width="130" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="视 频" Binding="{Binding Video}" Width="400" ElementStyle="{StaticResource TextStyleLeft}"/>
-                            <DataGridTextColumn Header="应 检" Binding="{Binding ActualCount}" Width="70" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="正 检" Binding="{Binding TrueDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="误 检" Binding="{Binding FalseDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="多 检" Binding="{Binding MultiDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}"/>
+                                                Width="50" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="场 景" Binding="{Binding Scene, Converter={StaticResource SceneConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="事 件" Binding="{Binding Incident, Converter={StaticResource IncidentConverter}}" Width="130" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="视 频" Binding="{Binding Video}" Width="400" ElementStyle="{StaticResource TextStyleLeft}" />
+                            <DataGridTextColumn Header="应 检" Binding="{Binding ActualCount}" Width="70" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="正 检" Binding="{Binding TrueDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="误 检" Binding="{Binding FalseDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="多 检" Binding="{Binding MultiDetect}" Width="70" ElementStyle="{StaticResource TextStyleCenter}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -84,22 +84,22 @@
 
             <TabItem Header="告警图片">
                 <Grid>
-                    <DataGrid x:Name="AlarmImageTab" 
-                              ItemsSource="{Binding}" 
-                              AutoGenerateColumns="False" 
-                              IsReadOnly="True" 
-                              AlternationCount="2" 
-                              SelectionMode="Extended" 
+                    <DataGrid x:Name="AlarmImageTab"
+                              ItemsSource="{Binding}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternationCount="2"
+                              SelectionMode="Extended"
                               SelectionUnit="Cell">
-                        
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="60" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="场 景" Binding="{Binding Scene, Converter={StaticResource SceneConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="事 件" Binding="{Binding Incident, Converter={StaticResource IncidentConverter}}" Width="150" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="图 片" Binding="{Binding ImagePath}" Width="400" ElementStyle="{StaticResource TextStyleLeft}"/>
-                            <DataGridTextColumn Header="判 定" Binding="{Binding State, Converter={StaticResource DetectTypeConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="数 量" Binding="{Binding Count}" Width="60" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="时 间 戳" Binding="{Binding Frame}" Width="100" ElementStyle="{StaticResource TextStyleCenter}"/>
+                            <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="60" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="场 景" Binding="{Binding Scene, Converter={StaticResource SceneConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="事 件" Binding="{Binding Incident, Converter={StaticResource IncidentConverter}}" Width="150" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="图 片" Binding="{Binding ImagePath}" Width="400" ElementStyle="{StaticResource TextStyleLeft}" />
+                            <DataGridTextColumn Header="判 定" Binding="{Binding State, Converter={StaticResource DetectTypeConverter}}" Width="100" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="数 量" Binding="{Binding IncidentCount}" Width="60" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="时 间 戳" Binding="{Binding Frame}" Width="100" ElementStyle="{StaticResource TextStyleCenter}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -107,20 +107,20 @@
 
             <TabItem Header="测试视频">
                 <Grid>
-                    <DataGrid x:Name="TestVideoTab" 
-                              ItemsSource="{Binding}" 
-                              AutoGenerateColumns="False" 
-                              IsReadOnly="True" 
-                              AlternationCount="2" 
-                              SelectionMode="Extended" 
-                              SelectionUnit="Cell" 
+                    <DataGrid x:Name="TestVideoTab"
+                              ItemsSource="{Binding}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternationCount="2"
+                              SelectionMode="Extended"
+                              SelectionUnit="Cell"
                               RowHeaderWidth="0">
 
                         <DataGrid.Columns>
                             <DataGridTextColumn Binding="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}, Mode=FindAncestor}}"
-                                                Width="50" ElementStyle="{StaticResource TextStyleCenter}"/>
-                            <DataGridTextColumn Header="视 频 名" Binding="{Binding VideoName}" Width="400" ElementStyle="{StaticResource TextStyleLeft}"/>
-                            <DataGridTextColumn Header="视 频 路 径" Binding="{Binding VideoPath}" Width="400" ElementStyle="{StaticResource TextStyleLeft}"/>
+                                                Width="50" ElementStyle="{StaticResource TextStyleCenter}" />
+                            <DataGridTextColumn Header="视 频 名" Binding="{Binding VideoName}" Width="400" ElementStyle="{StaticResource TextStyleLeft}" />
+                            <DataGridTextColumn Header="视 频 路 径" Binding="{Binding VideoPath}" Width="400" ElementStyle="{StaticResource TextStyleLeft}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -130,12 +130,12 @@
                 <Grid>
                     <lvc:CartesianChart x:Name="DataChart" LegendLocation="Top" FontSize="16" FontWeight="Bold">
                         <lvc:CartesianChart.AxisX>
-                            <lvc:Axis x:Name="AxisX" Foreground="Black" FontSize="14" FontWeight="SemiBold" LabelsRotation="-60"/>
+                            <lvc:Axis x:Name="AxisX" Foreground="Black" FontSize="14" FontWeight="SemiBold" LabelsRotation="-60" />
                         </lvc:CartesianChart.AxisX>
                         <lvc:CartesianChart.AxisY>
                             <lvc:Axis Title="百 分 比 (%)" Foreground="Black" MinValue="0" MaxValue="100" FontSize="18" FontWeight="Bold">
                                 <lvc:Axis.Separator>
-                                    <lvc:Separator Step="5"/>
+                                    <lvc:Separator Step="5" />
                                 </lvc:Axis.Separator>
                             </lvc:Axis>
                         </lvc:CartesianChart.AxisY>

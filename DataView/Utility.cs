@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataView
 {
-    class Utility
+    internal class Utility
     {
         // 递归获取文件夹下所有文件
         public static List<string> Director(string dirs)

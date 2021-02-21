@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Data;
+﻿using System.ComponentModel;
 
 namespace DataView
 {
@@ -14,22 +7,20 @@ namespace DataView
         UnKnown = 0,      // 未统计
         TrueDet = 1,      // 正检
         FalseDet = 2,     // 误检
-        Ignore = 4        // 不作统计
+        Ignore = 3        // 不作统计
     }
 
     public class NotifyPropertyChanged : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected internal void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
-    public class VideoInfoItem
+    public class VideoInfo
     {
         public string Scene { get; set; }
         public string VideoName { get; set; }
@@ -38,14 +29,14 @@ namespace DataView
     }
 
     // 测试视频
-    public class TestVideoItem
+    public class TestVideo
     {
         public string VideoName { get; set; }   // 视频名称(含后缀)
         public string VideoPath { get; set; }   // 视频绝对路径(不含文件名)
     }
 
     // 告警图片信息
-    public class AlarmDataItem : NotifyPropertyChanged
+    public class AlarmImage : NotifyPropertyChanged
     {
         private string _scene;          // 场景
         private string _incident;       // 事件
@@ -61,40 +52,55 @@ namespace DataView
             get { return _scene; }
             set { _scene = value; OnPropertyChanged("Scene"); }
         }
+
         public string Incident
         {
             get { return _incident; }
             set { _incident = value; OnPropertyChanged("Incident"); }
         }
+
         public string ImagePath
         {
             get { return _imgPath; }
             set { _imgPath = value; OnPropertyChanged("ImagePath"); }
         }
+
         public string Video
         {
             get { return _video; }
             set { _video = value; OnPropertyChanged("Video"); }
         }
+
         public int Frame
         {
             get { return _frame; }
             set { _frame = value; OnPropertyChanged("Frame"); }
         }
+
         public int ID
         {
             get { return _id; }
             set { _id = value; OnPropertyChanged("ID"); }
         }
+
         public DetectType State
         {
             get { return _state; }
-            set { _state = value; OnPropertyChanged("State"); }
+            set
+            {
+                if (_state != value)
+                {
+                    _state = value;
+                    IncidentCount = (value == DetectType.TrueDet || value == DetectType.FalseDet) ? 1 : 0;
+                    OnPropertyChanged("State");
+                }
+            }
         }
-        public int Count
+
+        public int IncidentCount
         {
             get { return _count; }
-            set { _count = value; OnPropertyChanged("Count"); }
+            set { _count = value; OnPropertyChanged("IncidentCount"); }
         }
     }
 
@@ -115,36 +121,43 @@ namespace DataView
             get { return _incident; }
             set { _incident = value; OnPropertyChanged("Incident"); }
         }
+
         public int ActualCount
         {
             get { return _actualCount; }
             set { _actualCount = value; OnPropertyChanged("ActualCount"); }
         }
+
         public int TrueDetect
         {
             get { return _trueDetect; }
             set { _trueDetect = value; OnPropertyChanged("TrueDetect"); }
         }
+
         public int FalseDetect
         {
             get { return _falseDetect; }
             set { _falseDetect = value; OnPropertyChanged("FalseDetect"); }
         }
+
         public int MultiDetect
         {
             get { return _multiDetect; }
             set { _multiDetect = value; OnPropertyChanged("MultiDetect"); }
         }
+
         public double Recall
         {
             get { return _recall; }
             set { _recall = value; OnPropertyChanged("Recall"); }
         }
+
         public double Precision
         {
             get { return _precision; }
             set { _precision = value; OnPropertyChanged("Precision"); }
         }
+
         public double MultiDetectRate
         {
             get { return _multiDetectRate; }
@@ -168,31 +181,37 @@ namespace DataView
             get { return _scene; }
             set { _scene = value; OnPropertyChanged("Scene"); }
         }
+
         public string Video
         {
             get { return _video; }
             set { _video = value; OnPropertyChanged("Video"); }
         }
+
         public string Incident
         {
             get { return _incident; }
             set { _incident = value; OnPropertyChanged("Incident"); }
         }
+
         public int ActualCount
         {
             get { return _actualCount; }
             set { _actualCount = value; OnPropertyChanged("ActualCount"); }
         }
+
         public int TrueDetect
         {
             get { return _trueDetect; }
             set { _trueDetect = value; OnPropertyChanged("TrueDetect"); }
         }
+
         public int FalseDetect
         {
             get { return _falseDetect; }
             set { _falseDetect = value; OnPropertyChanged("FalseDetect"); }
         }
+
         public int MultiDetect
         {
             get { return _multiDetect; }
@@ -206,5 +225,17 @@ namespace DataView
         public int TrueDetect = 0;    // 正检
         public int FalseDetect = 0;   // 误检
         public int MultiDetect = 0;   // 多检
+    }
+
+    public class SceneItem
+    {
+        public string Name { get; set; }
+        public string Display { get; set; }
+    }
+
+    public class IncidentItem
+    {
+        public string Name { get; set; }
+        public string Display { get; set; }
     }
 }

@@ -1,21 +1,12 @@
-﻿using System;
+﻿using LiveCharts;
+using LiveCharts.Wpf;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using LiveCharts;
-using LiveCharts.Wpf;
-using System.Collections.ObjectModel;
-using LiveCharts.Defaults;
 using Path = System.IO.Path;
 
 namespace DataView
@@ -26,28 +17,28 @@ namespace DataView
 
         private readonly ObservableCollection<DataItem> generalData = new ObservableCollection<DataItem>();               // 总数据
         private readonly ObservableCollection<DetailDataItem> detailData = new ObservableCollection<DetailDataItem>();    // 详细数据(以视频为单位)
-        private readonly ObservableCollection<AlarmDataItem> alarmImageData = new ObservableCollection<AlarmDataItem>();  // 告警图片
-        private readonly ObservableCollection<TestVideoItem> testVideoData = new ObservableCollection<TestVideoItem>();   // 测试视频
+        private readonly ObservableCollection<AlarmImage> alarmImageData = new ObservableCollection<AlarmImage>();  // 告警图片
+        private readonly ObservableCollection<TestVideo> testVideoData = new ObservableCollection<TestVideo>();   // 测试视频
 
-        private readonly ColumnSeries recall = new ColumnSeries 
-        { 
-            Title = "检出率", 
+        private readonly ColumnSeries recall = new ColumnSeries
+        {
+            Title = "检出率",
             Values = new ChartValues<double>(),
             Fill = new SolidColorBrush(Color.FromRgb(36, 169, 225)),
             MaxColumnWidth = 25
         };
 
-        private readonly ColumnSeries precision = new ColumnSeries 
-        { 
-            Title = "准确率", 
+        private readonly ColumnSeries precision = new ColumnSeries
+        {
+            Title = "准确率",
             Values = new ChartValues<double>(),
             Fill = new SolidColorBrush(Color.FromRgb(107, 194, 53)),
-            MaxColumnWidth = 25 
+            MaxColumnWidth = 25
         };
 
-        private readonly ColumnSeries multiDetRate = new ColumnSeries 
-        { 
-            Title = "多检率", 
+        private readonly ColumnSeries multiDetRate = new ColumnSeries
+        {
+            Title = "多检率",
             Values = new ChartValues<double>(),
             Fill = new SolidColorBrush(Color.FromRgb(248, 147, 29)),
             MaxColumnWidth = 25
@@ -70,15 +61,15 @@ namespace DataView
         }
 
         // 添加告警图片
-        public void AddAlarmImageItem(AlarmDataItem item)
+        public void AddAlarmImageItem(AlarmImage item)
         {
             alarmImageData.Add(item);
         }
 
         // 更新统计结果
-        public void UpdateAlarmImageItem(AlarmDataItem item)
+        public void UpdateAlarmImageItem(AlarmImage item)
         {
-            var _list = alarmImageData.Where(f =>Path.GetFileName(f.ImagePath) == Path.GetFileName(item.ImagePath)).ToList();
+            var _list = alarmImageData.Where(f => Path.GetFileName(f.ImagePath) == Path.GetFileName(item.ImagePath)).ToList();
             if (_list.Count == 0)
             {
                 alarmImageData.Add(item);
@@ -158,7 +149,8 @@ namespace DataView
             multiDetRate.Values.Clear();
             foreach (var item in generalData)
             {
-                AxisX.Labels.Add(MainWindow.IncidentDict.ContainsKey(item.Incident) ? MainWindow.IncidentDict[item.Incident] : item.Incident);
+                var _list = MainWindow.Incidents.Where(it => it.Name == item.Incident).ToList();
+                AxisX.Labels.Add(_list.Count > 0 ? _list[0].Display : item.Incident);
                 recall.Values.Add(item.Recall * 100);
                 precision.Values.Add(item.Precision * 100);
                 multiDetRate.Values.Add(item.MultiDetectRate * 100);
@@ -166,7 +158,7 @@ namespace DataView
         }
 
         // 添加测试视频
-        public void AddTestVideoItem(TestVideoItem item)
+        public void AddTestVideoItem(TestVideo item)
         {
             testVideoData.Add(item);
         }
@@ -189,7 +181,7 @@ namespace DataView
         }
 
         // 关闭窗口
-        void OnWindowClose(object sender, System.ComponentModel.CancelEventArgs e)
+        private void OnWindowClose(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 隐藏窗口,并不实际关闭
             if (!_terminateFlag)
