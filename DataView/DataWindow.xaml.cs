@@ -87,11 +87,11 @@ namespace DataView
             {
                 detailData.Add(item);
             }
-            SetGeneralData();
+            UpdateGeneralData();
             UpdateChart();
         }
 
-        private void SetGeneralData()
+        private void UpdateGeneralData()
         {
             Dictionary<string, DataItem> dat = new Dictionary<string, DataItem>();
             // 汇总各事件应检、正检、误检、多检

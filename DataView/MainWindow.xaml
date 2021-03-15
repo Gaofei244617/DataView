@@ -60,7 +60,7 @@
             </Menu.Resources>
 
             <MenuItem Header="导入数据" Width="90" FontSize="12" Icon="import.png">
-                <MenuItem Header="初始化数据" Height="30" Icon="all.png" Click="ImportDataClick" />
+                <MenuItem Header="初始化数据" Height="30" Icon="all.png" Click="InitDataClick" />
                 <MenuItem Header="更新告警图片" Height="30" Icon="image.png" />
                 <MenuItem Header="更新测试视频" Height="30" Icon="video.png" />
                 <MenuItem Header="更新视频标注" Height="30" Icon="xml.png" />

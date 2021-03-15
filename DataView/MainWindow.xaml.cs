@@ -401,19 +401,39 @@ namespace DataView
             cmd.ExecuteNonQuery();
         }
 
+        // 初始化统计数据
         public void InitData(string alarmImagePath, string videoPath, string xmlFile)
         {
             InitMemoryData(alarmImagePath, videoPath, xmlFile);
             InitDataBase(alarmImagePath, videoPath, xmlFile);
-            MessageWindow.ShowDialog("数据初始化完成, 请选择统计图片", this);
         }
 
-        // 统计指标(TreeView ContextMenu)
-        private void CountDataClick(object sender, RoutedEventArgs e)
+        // 初始化数据Click
+        private void InitDataClick(object sender, RoutedEventArgs e)
         {
-            var treeViewItem = ImageTreeView.SelectedItem as FileRecord;
-            var dir = treeViewItem.Info.FullName;
+            ImportDataDialog win = new ImportDataDialog
+            {
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            win.ShowDialog(); // 模态方式显示
 
+            string _alarmImagePath = ImportDataDialog.alarmImagePath;
+            string _videoPath = ImportDataDialog.videoPath;
+            string _xmlFile = ImportDataDialog.xmlFile;
+            if (_alarmImagePath == null || _videoPath == null || _xmlFile == null)
+            {
+                MessageWindow.ShowDialog("初始化数据失败", this);
+                return;
+            }
+            dataWindow?.Init();  // 初始化数据窗口
+            InitData(_alarmImagePath, _videoPath, _xmlFile);
+            CountData(_alarmImagePath);
+            MessageWindow.ShowDialog("数据初始化完成", this);
+        }
+
+        private void CountData(string dir)
+        {
             alarmImageList.Clear();
             foreach (var item in alarmImageListAll)
             {
@@ -443,6 +463,14 @@ namespace DataView
                 CommandText = string.Format($"INSERT OR REPLACE INTO DataPathTab(Item, Path) VALUES ('LastImagePath', '{dir}')")
             };
             cmd.ExecuteNonQuery();
+        }
+
+        // 统计指标(TreeView ContextMenu)
+        private void CountDataClick(object sender, RoutedEventArgs e)
+        {
+            var treeViewItem = ImageTreeView.SelectedItem as FileRecord;
+            string dir = treeViewItem.Info.FullName;
+            CountData(dir);
         }
 
         // 恢复上次状态
@@ -886,28 +914,6 @@ namespace DataView
             }
         }
 
-        // 初始化数据
-        private void ImportDataClick(object sender, RoutedEventArgs e)
-        {
-            ImportDataDialog win = new ImportDataDialog
-            {
-                Owner = this,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-            win.ShowDialog(); // 模态方式显示
-
-            string _alarmImagePath = ImportDataDialog.alarmImagePath;
-            string _videoPath = ImportDataDialog.videoPath;
-            string _xmlFile = ImportDataDialog.xmlFile;
-            if (_alarmImagePath == null || _videoPath == null || _xmlFile == null)
-            {
-                MessageWindow.ShowDialog("初始化数据失败", this);
-                return;
-            }
-            dataWindow?.Init();  // 初始化数据窗口
-            InitData(_alarmImagePath, _videoPath, _xmlFile);
-        }
-
         // 导出数据
         private void ExportData(object sender, RoutedEventArgs e)
         {
@@ -955,6 +961,7 @@ namespace DataView
                 Connection = new SQLiteConnection(_dbPath),
                 CommandText = "SELECT * FROM AlarmImageTab WHERE state != 0"
             };
+            cmd.Connection.Open();
 
             List<AlarmImage> _alarmImageList = new List<AlarmImage>();
             using (SQLiteDataReader dataReader = cmd.ExecuteReader())
@@ -979,19 +986,20 @@ namespace DataView
             }
 
             // 合并数据
+            if (dbConnection == null)
+            {
+                MessageWindow.ShowDialog("无法连接到数据库", this);
+                return;
+            }
+            cmd = new SQLiteCommand { Connection = dbConnection };
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
             foreach (var item in _alarmImageList)
             {
                 if (item.State != DetectType.UnKnown)
                 {
-                    if (dbConnection == null)
-                    {
-                        MessageWindow.ShowDialog("无法连接到数据库", this);
-                        return;
-                    }
-
                     var imgs = alarmImageListAll.Where(f => Path.GetFileName(f.ImagePath) == Path.GetFileName(item.ImagePath)).ToList();
-                    cmd = new SQLiteCommand { Connection = dbConnection };
-                    if (imgs.Count == 0)
+                    if (imgs.Count == 0)  // 新的告警图片
                     {
                         alarmImageListAll.Add(item);
                         // 更新数据库
@@ -999,7 +1007,7 @@ namespace DataView
                             $" VALUES ('{item.ID}', '{item.ImagePath}','{item.Scene}','{item.Incident}', '{item.Video}', '{item.Frame}', '{(int)item.State}', '{item.IncidentCount}')");
                         cmd.ExecuteNonQuery();
                     }
-                    else
+                    else  // 已存在的告警图片
                     {
                         imgs[0].State = item.State;
                         imgs[0].IncidentCount = item.IncidentCount;
@@ -1010,6 +1018,13 @@ namespace DataView
                     dataWindow.UpdateAlarmImageItem(item);
                 }
             }
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
+
+            // 更新数据窗口
+            dataWindow.SetDetailData(GetDetailData());
+
+            MessageWindow.ShowDialog("完成数据合并", this);
         }
 
         // 关于
