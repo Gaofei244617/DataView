@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +27,7 @@ namespace DataView
         public static List<SceneItem> Scenes = new List<SceneItem>();               // 场景集合
         public static List<IncidentItem> Incidents = new List<IncidentItem>();      // 事件集合
 
-        private readonly string _aboutInfo = "交通事件指标统计系统" + "\n" + "版 本: V1.1"; // 版本信息
+        private readonly string _aboutInfo = "交通事件指标统计系统" + "\n" + "版 本: V1.2"; // 版本信息
         private DataWindow dataWindow = new DataWindow();                           // 数据窗口
         private SQLiteConnection dbConnection = null;                               // 数据库连接
         
@@ -185,13 +186,15 @@ namespace DataView
 
                 // 图片命名方式: 视频名___事件_帧号.jpg
                 int _id = 0;
+                List<string> error_msg = new List<string>();
                 foreach (string img in alarmImages)
                 {
                     string name = Path.GetFileNameWithoutExtension(img);
                     string[] strs = Regex.Split(name, "___", RegexOptions.IgnoreCase);
                     if (strs.Length < 2)
                     {
-                        MessageWindow.Show("告警图片命名格式错误\n" + img, this);
+                        //MessageWindow.Show("告警图片命名格式错误\n" + img, this);
+                        error_msg.Add(img);
                         continue;
                     }
                     string[] infos = strs[1].Split('_');
@@ -236,6 +239,13 @@ namespace DataView
                     images.Add(_alarmDataItem);
                 }
 
+                // 错误信息
+                if (error_msg.Count > 0)
+                {
+                    StringBuilder error_str = new StringBuilder("告警图片格式错误:" + "\n");
+                    error_msg.ForEach(it => error_str.Append(it + "\n"));
+                    MessageWindow.Show(error_str.ToString());
+                }
                 return images;
             }
             else
@@ -408,7 +418,7 @@ namespace DataView
             InitDataBase(alarmImagePath, videoPath, xmlFile);
         }
 
-        // 初始化数据Click
+        // 菜单栏：初始化数据Click
         private void InitDataClick(object sender, RoutedEventArgs e)
         {
             ImportDataDialog win = new ImportDataDialog
@@ -430,6 +440,53 @@ namespace DataView
             InitData(_alarmImagePath, _videoPath, _xmlFile);
             CountData(_alarmImagePath);
             MessageWindow.ShowDialog("数据初始化完成", this);
+        }
+
+        // 菜单栏：更新标注视频Click
+        private void UpdateVideoInfoClick(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog { Filter = "Data Base file (.xml)|*.xml|All files(*.*)|*.*" };
+            string fileName = null;
+            if (openFileDialog.ShowDialog() == true)
+            {
+                fileName = openFileDialog.FileName;
+            }
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            // 解析xml文件
+            videoInfoList = ParseXml(fileName);
+
+            // 详细数据
+            dataWindow.SetDetailData(GetDetailData());
+
+            // 更新数据库
+            if (dbConnection == null)
+            {
+                MessageWindow.ShowDialog("无法连接到数据库");
+                return;
+            }
+
+            SQLiteCommand cmd = new SQLiteCommand { Connection = dbConnection };
+            // 清空VideoInfoTab数据表
+            cmd.CommandText = "DELETE FROM VideoInfoTab";
+            cmd.ExecuteNonQuery();
+
+            // 新数据写入数据库
+            cmd.CommandText = "BEGIN";
+            cmd.ExecuteNonQuery();
+            foreach (var item in videoInfoList)
+            {
+                cmd.CommandText = string.Format($"INSERT INTO VideoInfoTab(Scene, video, Incident, Count) " +
+                    $"VALUES ('{item.Scene}', '{item.VideoName}', '{item.Incident}', '{item.Count}')");
+                cmd.ExecuteNonQuery();
+            }
+            cmd.CommandText = "COMMIT";
+            cmd.ExecuteNonQuery();
+
+            MessageWindow.ShowDialog("更新完成!", this);
         }
 
         private void CountData(string dir)
